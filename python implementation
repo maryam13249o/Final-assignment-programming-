@@ -1,0 +1,60 @@
+from datetime import datetime
+
+#User and Admin
+
+class User:
+    def __init__(self, username, email):
+        self.username = username
+        self.email = email
+        self.orders = []
+
+    def add_order(self, order):
+        self.orders.append(order)
+
+    def view_orders(self):
+        for order in self.orders:
+            print(order)
+
+
+class Admin(User):
+    def apply_discount(self, ticket, amount):
+        ticket.price -= amount
+
+#Ticket
+
+class Ticket:
+    def __init__(self, ticket_type, price):
+        self.ticket_type = ticket_type
+        self.price = price
+
+    def __str__(self):
+        return f"{self.ticket_type} - ${self.price}"
+
+#Purchase Order
+
+class PurchaseOrder:
+    def __init__(self, ticket, quantity):
+        self.ticket = ticket
+        self.quantity = quantity
+        self.date = datetime.now().strftime("%Y-%m-%d")
+        self.total = ticket.price * quantity
+
+    def __str__(self):
+        return f"{self.quantity} x {self.ticket.ticket_type} on {self.date} | Total: ${self.total}"
+
+#Testing
+
+if __name__ == "__main__":
+    user = User("maryam", "maryam@email.com")
+    ticket1 = Ticket("Single Race", 100)
+    order = PurchaseOrder(ticket1, 2)
+    user.add_order(order)
+
+    print("User Orders:")
+    user.view_orders()
+
+    admin = Admin("admin", "admin@f1.com")
+    ticket2 = Ticket("Weekend Pass", 250)
+    admin.apply_discount(ticket2, 50)
+    print("\nDiscounted Ticket:")
+    print(ticket2)
