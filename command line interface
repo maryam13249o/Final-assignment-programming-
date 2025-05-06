@@ -1,0 +1,87 @@
+# Users and ticket data
+users = []
+tickets = [
+    {"type": "Single Race", "price": 100},
+    {"type": "Weekend Pass", "price": 250},
+    {"type": "Season Membership", "price": 1000},
+    {"type": "Group Discount", "price": 80}
+]
+
+# Define a User class
+class User:
+    def __init__(self, username, email):
+        self.username = username
+        self.email = email
+        self.orders = []
+
+    def __str__(self):
+        return f"{self.username} ({self.email})"
+
+# Functions to simulate login and registration
+def register_user():
+    username = input("Enter a username: ")
+    email = input("Enter your email: ")
+    new_user = User(username, email)
+    users.append(new_user)
+    print(f"Registered {username} successfully!\n")
+
+def login_user():
+    username = input("Enter username to login: ")
+    email = input("Enter your email: ")
+    for user in users:
+        if user.username == username and user.email == email:
+            print(f"Logged in as {user.username}\n")
+            return user
+    print("Invalid credentials!\n")
+    return None
+
+def show_menu():
+    print("--- Ticket System ---")
+    print("1. Register")
+    print("2. Login")
+    print("3. Exit")
+    choice = input("Choose an option: ")
+    
+    if choice == '1':
+        register_user()
+    elif choice == '2':
+        user = login_user()
+        if user:
+            user_menu(user)
+    elif choice == '3':
+        print("Exiting the system.")
+        return 'exit'
+    else:
+        print("Invalid option! Try again.\n")
+    return None
+
+def user_menu(user):
+    print(f"\nWelcome {user.username}!\n")
+    while True:
+        print("1. View Tickets")
+        print("2. Logout")
+        choice = input("Choose an option: ")
+
+        if choice == '1':
+            view_tickets()
+        elif choice == '2':
+            print("Logged out.\n")
+            break
+        else:
+            print("Invalid option! Try again.\n")
+
+def view_tickets():
+    print("\nAvailable Tickets:")
+    for idx, ticket in enumerate(tickets, 1):
+        print(f"{idx}. {ticket['type']} - ${ticket['price']}")
+    print("")
+
+# Start the menu loop
+def main():
+    while True:
+        result = show_menu()
+        if result == 'exit':
+            break
+
+if __name__ == "__main__":
+    main()
