@@ -1,0 +1,378 @@
+# Users and ticket data
+users = []
+tickets = [
+    {"type": "Single Race", "price": 100},
+    {"type": "Weekend Pass", "price": 250},
+    {"type": "Season Membership", "price": 1000},
+    {"type": "Group Discount", "price": 80}
+]
+
+# Define a User class
+class User:
+    def __init__(self, username, email):
+        self.username = username
+        self.email = email
+        self.orders = []
+
+    def __str__(self):
+        return f"{self.username} ({self.email})"
+
+# Functions to simulate login and registration
+def register_user():
+    username = input("Enter a username: ")
+    email = input("Enter your email: ")
+    new_user = User(username, email)
+    users.append(new_user)
+    print(f"Registered {username} successfully!\n")
+
+def login_user():
+    username = input("Enter username to login: ")
+    email = input("Enter your email: ")
+    for user in users:
+        if user.username == username and user.email == email:
+            print(f"Logged in as {user.username}\n")
+            return user
+    print("Invalid credentials!\n")
+    return None
+
+def show_menu():
+    print("--- Ticket System ---")
+    print("1. Register")
+    print("2. Login")
+    print("3. Exit")
+    choice = input("Choose an option: ")
+    
+    if choice == '1':
+        register_user()
+    elif choice == '2':
+        user = login_user()
+        if user:
+            user_menu(user)
+    elif choice == '3':
+        print("Exiting the system.")
+        return 'exit'
+    else:
+        print("Invalid option! Try again.\n")
+    return None
+
+def user_menu(user):
+    print(f"\nWelcome {user.username}!\n")
+    while True:
+        print("1. View Tickets")
+        print("2. Logout")
+        choice = input("Choose an option: ")
+
+        if choice == '1':
+            view_tickets()
+        elif choice == '2':
+            print("Logged out.\n")
+            break
+        else:
+            print("Invalid option! Try again.\n")
+
+def view_tickets():
+    print("\nAvailable Tickets:")
+    for idx, ticket in enumerate(tickets, 1):
+        print(f"{idx}. {ticket['type']} - ${ticket['price']}")
+    print("")
+
+# Start the menu loop
+def main():
+    while True:
+        result = show_menu()
+        if result == 'exit':
+            break
+
+if __name__ == "__main__":
+    main()
+
+
+
+Code for GUI:
+import tkinter as tk
+from tkinter import messagebox, ttk
+import pickle
+import os
+from datetime import datetime
+
+# Models
+
+class Ticket:
+    def __init__(self, ticket_type, price):
+        self.ticket_type = ticket_type
+        self.price = price
+
+    def __str__(self):
+        return f"{self.ticket_type} - ${self.price}"
+
+class PurchaseOrder:
+    def __init__(self, ticket, quantity, payment_method):
+        self.ticket = ticket
+        self.quantity = quantity
+        self.payment_method = payment_method
+        self.date = datetime.now().strftime("%Y-%m-%d")
+        self.total = ticket.price * quantity
+
+    def __str__(self):
+        return f"{self.quantity} x {self.ticket.ticket_type} on {self.date} | Total: ${self.total} | Paid by: {self.payment_method}"
+
+class User:
+    def __init__(self, username, email):
+        self.username = username
+        self.email = email
+        self.orders = []
+
+    def add_order(self, order):
+        self.orders.append(order)
+
+    def remove_order(self, order):
+        if order in self.orders:
+            self.orders.remove(order)
+
+    def update_details(self, new_username, new_email):
+        self.username = new_username
+        self.email = new_email
+
+    def __str__(self):
+        return f"{self.username} ({self.email})"
+
+class Admin(User):
+    def apply_discount(self, ticket, amount):
+        ticket.price -= amount
+
+# Persistence functions
+
+def load_data(filename):
+    if os.path.exists(filename):
+        with open(filename, 'rb') as f:
+            return pickle.load(f)
+    return []
+
+def save_data(filename, data):
+    with open(filename, 'wb') as f:
+        pickle.dump(data, f)
+
+users = load_data('users.pkl')
+tickets = load_data('tickets.pkl')
+orders = load_data('orders.pkl')
+
+if not tickets:
+    tickets = [
+        Ticket("Single Race", 100),
+        Ticket("Weekend Pass", 250),
+        Ticket("Season Membership", 1000),
+        Ticket("Group Discount", 80)
+    ]
+    save_data('tickets.pkl', tickets)
+
+# GUI
+
+class App:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Grand Prix Ticketing System")
+        self.current_user = None
+
+        self.login_screen()
+
+    def login_screen(self):
+        self.clear()
+        tk.Label(self.root, text="Login or Register", font=("Arial", 18)).pack(pady=10)
+
+        tk.Label(self.root, text="Username").pack()
+        self.username_entry = tk.Entry(self.root)
+        self.username_entry.pack()
+
+        tk.Label(self.root, text="Email").pack()
+        self.email_entry = tk.Entry(self.root)
+        self.email_entry.pack()
+
+        tk.Button(self.root, text="Login/Register", command=self.login_register).pack(pady=10)
+        tk.Button(self.root, text="Admin Login", command=self.admin_login).pack(pady=10)
+
+    def login_register(self):
+        name = self.username_entry.get()
+        email = self.email_entry.get()
+
+        for user in users:
+            if user.username == name and user.email == email:
+                self.current_user = user
+                break
+        else:
+            if name == "admin":
+                self.current_user = Admin(name, email)
+            else:
+                self.current_user = User(name, email)
+            users.append(self.current_user)
+            save_data("users.pkl", users)
+
+        if isinstance(self.current_user, Admin):
+            self.admin_dashboard()
+        else:
+            self.user_menu()
+
+    def admin_login(self):
+        name = self.username_entry.get()
+        email = self.email_entry.get()
+
+        if name == "admin" and email:
+            self.current_user = Admin(name, email)
+            self.admin_dashboard()
+        else:
+            messagebox.showerror("Error", "Invalid admin credentials!")
+
+    def user_menu(self):
+        self.clear()
+        tk.Label(self.root, text=f"Welcome {self.current_user.username}", font=("Arial", 18)).pack()
+
+        tk.Button(self.root, text="Buy Ticket", command=self.buy_ticket).pack(pady=5)
+        tk.Button(self.root, text="View My Orders", command=self.view_orders).pack(pady=5)
+        tk.Button(self.root, text="Modify Account Details", command=self.modify_account).pack(pady=5)
+        tk.Button(self.root, text="Logout", command=self.logout).pack(pady=5)
+
+    def admin_dashboard(self):
+        self.clear()
+        tk.Label(self.root, text="Admin Dashboard", font=("Arial", 18)).pack()
+        tk.Button(self.root, text="View Ticket Sales", command=self.view_ticket_sales).pack(pady=5)
+        tk.Button(self.root, text="Modify Discounts", command=self.modify_discounts).pack(pady=5)
+        tk.Button(self.root, text="Logout", command=self.logout).pack(pady=5)
+
+    def buy_ticket(self):
+        self.clear()
+        tk.Label(self.root, text="Select Ticket", font=("Arial", 18)).pack()
+
+        self.ticket_var = tk.StringVar()
+        for ticket in tickets:
+            tk.Radiobutton(self.root, text=str(ticket), variable=self.ticket_var, value=ticket.ticket_type).pack()
+
+        tk.Label(self.root, text="Quantity").pack()
+        self.qty_entry = tk.Entry(self.root)
+        self.qty_entry.pack()
+
+        # Payment method
+        tk.Label(self.root, text="Select Payment Method").pack(pady=5)
+        self.payment_var = tk.StringVar(value="Card")
+        tk.Radiobutton(self.root, text="Card", variable=self.payment_var, value="Card").pack()
+        tk.Radiobutton(self.root, text="Cash", variable=self.payment_var, value="Cash").pack()
+        tk.Radiobutton(self.root, text="PayPal", variable=self.payment_var, value="PayPal").pack()
+
+        tk.Button(self.root, text="Confirm Purchase", command=self.confirm_purchase).pack(pady=10)
+        tk.Button(self.root, text="Back", command=self.user_menu).pack()
+
+    def confirm_purchase(self):
+        try:
+            selected_type = self.ticket_var.get()
+            quantity = int(self.qty_entry.get())
+            payment_method = self.payment_var.get()
+
+            selected_ticket = next(t for t in tickets if t.ticket_type == selected_type)
+            order = PurchaseOrder(selected_ticket, quantity, payment_method)
+            self.current_user.add_order(order)
+            orders.append(order)
+            save_data("orders.pkl", orders)
+            save_data("users.pkl", users)
+            messagebox.showinfo("Success", f"Ticket purchased using {payment_method}!")
+            self.user_menu()
+        except Exception as e:
+            messagebox.showerror("Error", f"Invalid input: {e}")
+
+    def view_orders(self):
+        self.clear()
+        tk.Label(self.root, text="My Orders", font=("Arial", 18)).pack()
+
+        for order in self.current_user.orders:
+            order_frame = tk.Frame(self.root)
+            order_frame.pack(pady=5)
+
+            tk.Label(order_frame, text=str(order)).pack(side=tk.LEFT)
+            tk.Button(order_frame, text="Cancel Order", command=lambda order=order: self.cancel_order(order)).pack(side=tk.RIGHT)
+
+        tk.Button(self.root, text="Back", command=self.user_menu).pack(pady=10)
+
+    def cancel_order(self, order):
+        self.current_user.remove_order(order)
+        orders.remove(order)
+        save_data("orders.pkl", orders)
+        save_data("users.pkl", users)
+        messagebox.showinfo("Success", "Order canceled.")
+        self.view_orders()
+
+    def modify_account(self):
+        self.clear()
+        tk.Label(self.root, text="Modify Account Details", font=("Arial", 18)).pack()
+
+        tk.Label(self.root, text="New Username").pack()
+        self.new_username_entry = tk.Entry(self.root)
+        self.new_username_entry.insert(0, self.current_user.username)
+        self.new_username_entry.pack()
+
+        tk.Label(self.root, text="New Email").pack()
+        self.new_email_entry = tk.Entry(self.root)
+        self.new_email_entry.insert(0, self.current_user.email)
+        self.new_email_entry.pack()
+
+        tk.Button(self.root, text="Save Changes", command=self.save_account_changes).pack(pady=5)
+        tk.Button(self.root, text="Back", command=self.user_menu).pack()
+
+    def save_account_changes(self):
+        new_username = self.new_username_entry.get()
+        new_email = self.new_email_entry.get()
+        self.current_user.update_details(new_username, new_email)
+        save_data("users.pkl", users)
+        messagebox.showinfo("Success", "Account details updated.")
+        self.user_menu()
+
+    def view_ticket_sales(self):
+        self.clear()
+        tk.Label(self.root, text="Ticket Sales Summary", font=("Arial", 18)).pack()
+
+        sales = {}
+        for o in orders:
+            key = o.ticket.ticket_type
+            sales[key] = sales.get(key, 0) + o.quantity
+
+        for ticket_type, qty in sales.items():
+            tk.Label(self.root, text=f"{ticket_type}: {qty} sold").pack()
+
+        tk.Button(self.root, text="Back", command=self.admin_dashboard).pack(pady=10)
+
+    def modify_discounts(self):
+        self.clear()
+        tk.Label(self.root, text="Modify Ticket Discounts", font=("Arial", 18)).pack()
+
+        tk.Label(self.root, text="Ticket Type").pack()
+        self.discount_ticket_var = tk.StringVar()
+        for ticket in tickets:
+            tk.Radiobutton(self.root, text=str(ticket), variable=self.discount_ticket_var, value=ticket.ticket_type).pack()
+
+        tk.Label(self.root, text="Discount Amount").pack()
+        self.discount_entry = tk.Entry(self.root)
+        self.discount_entry.pack()
+
+        tk.Button(self.root, text="Apply Discount", command=self.apply_discount).pack(pady=10)
+        tk.Button(self.root, text="Back", command=self.admin_dashboard).pack()
+
+    def apply_discount(self):
+        try:
+            selected_type = self.discount_ticket_var.get()
+            discount_amount = float(self.discount_entry.get())
+            selected_ticket = next(t for t in tickets if t.ticket_type == selected_type)
+            self.current_user.apply_discount(selected_ticket, discount_amount)
+            save_data("tickets.pkl", tickets)
+            messagebox.showinfo("Success", f"Discount applied to {selected_ticket.ticket_type}")
+            self.admin_dashboard()
+        except Exception as e:
+            messagebox.showerror("Error", f"Invalid input: {e}")
+
+    def logout(self):
+        self.current_user = None
+        self.login_screen()
+
+    def clear(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+# Start the app
+root = tk.Tk()
+app = App(root)
+root.mainloop() 
