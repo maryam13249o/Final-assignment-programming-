@@ -1,0 +1,57 @@
+#Code cell 1: Class Definitions for Ticket System 
+# Minimal required class definitions for testing
+class Ticket:
+    def __init__(self, ticket_type, price):
+        self.ticket_type = ticket_type
+        self.price = price
+
+class PurchaseOrder:
+    def __init__(self, ticket, quantity):
+        self.ticket = ticket
+        self.quantity = quantity
+        self.total = ticket.price * quantity
+
+class User:
+    def __init__(self, username, email):
+        self.username = username
+        self.email = email
+        self.orders = []
+
+    def add_order(self, order):
+        self.orders.append(order)
+
+class Admin(User):
+    def apply_discount(self, ticket, amount):
+        ticket.price -= amount
+
+#Code cell 2: Unit Test Class for Ticket System
+import unittest
+
+class TestTicketSystem(unittest.TestCase):
+    def test_ticket_creation(self):
+        ticket = Ticket("Standard", 50)
+        self.assertEqual(ticket.ticket_type, "Standard")
+        self.assertEqual(ticket.price, 50)
+
+    def test_purchase_order_total(self):
+        ticket = Ticket("VIP", 100)
+        order = PurchaseOrder(ticket, 3)
+        self.assertEqual(order.total, 300)
+#Code cell 3: Additional Tests Methods for User and Admin
+def test_user_add_order(self):
+        ticket = Ticket("Standard", 20)
+        user = User("Alice", "alice@example.com")
+        order = PurchaseOrder(ticket, 2)
+        user.add_order(order)
+        self.assertEqual(len(user.orders), 1)
+        self.assertEqual(user.orders[0].total, 40)
+
+    def test_admin_discount(self):
+        admin = Admin("AdminUser", "admin@example.com")
+        ticket = Ticket("Gold", 100)
+        admin.apply_discount(ticket, 30)
+        self.assertEqual(ticket.price, 70)
+
+#Code cell 4: Running the Unit Tests
+if __name__ == '__main__':
+    unittest.main(argv=[''], exit=False)
